@@ -2194,11 +2194,13 @@ function doPost(e) {
         const safeName = studentName.replace(/[^a-zA-Z0-9_-]/g, '_');
         const filename = `My_Adventure_In_The_Park_${safeName}.pdf`;
 
-        doc.save(filename);
+        // Build PDF bytes first; upload to Drive BEFORE local download so iPad/Safari
+        // does not cancel the in-flight fetch when the download starts.
+        const pdfBase64 = doc.output('datauristring').split(',')[1];
 
         if (state.driveWebhookUrl) {
           try {
-            const pdfBase64 = doc.output('datauristring').split(',')[1];
+            showToast('Sending to Teacher Drive…', '☁️');
             // text/plain keeps this a "simple" no-cors request (json Content-Type is blocked)
             await fetch(state.driveWebhookUrl, {
               method: 'POST',
@@ -2212,11 +2214,14 @@ function doPost(e) {
                 pdfBase64
               })
             });
+            doc.save(filename);
             showToast(`Saved "${filename}" & sent to Teacher's Google Drive!`, '☁️');
           } catch (driveErr) {
-            showToast(`Downloaded "${filename}"!`, '📥');
+            doc.save(filename);
+            showToast(`Downloaded "${filename}" but Drive send failed — try again / check wifi`, '📥');
           }
         } else {
+          doc.save(filename);
           showToast(`Saved "${filename}" on this device. To also send to Drive: Setup → paste your Web App URL → Save Drive URL`, '📥');
         }
 
