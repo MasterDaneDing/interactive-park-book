@@ -970,13 +970,13 @@
         stageActors.innerHTML = heroActorHtml('anim-talk', `✨ Amazing ${state.heroGender} (${tpl.name})!`, 'w-32 h-56 sm:w-40 sm:h-68');
       } else if (p === 8) {
         stageActors.innerHTML = `
-          ${heroActorHtml('anim-talk', '🛑 "We shouldn't argue or fight!"')}
+          ${heroActorHtml('anim-talk', `🛑 "We shouldn't argue or fight!"`)}
           ${charActorHtml(m, 'anim-idle', '😮 You are right...')}
         `;
       } else if (p === 9) {
         stageActors.innerHTML = `
-          ${heroActorHtml('anim-talk', '🤝 "Let's say sorry to them!"')}
-          ${charActorHtml(m, 'anim-talk', 'Okay! Let's go together!')}
+          ${heroActorHtml('anim-talk', `🤝 "Let's say sorry to them!"`)}
+          ${charActorHtml(m, 'anim-talk', `Okay! Let's go together!`)}
         `;
       } else if (p === 10) {
         // Show Hero bringing Main Character & Other Character saying sorry (using real sorry-* artwork + Hero!)
@@ -1004,7 +1004,7 @@
       } else if (p === 11) {
         stageActors.innerHTML = `
           ${charActorHtml(m, 'anim-talk', '🤝 No lying or fighting!')}
-          ${heroActorHtml('anim-talk', '🌈 Can't we all be friends?')}
+          ${heroActorHtml('anim-talk', `🌈 Can't we all be friends?`)}
           ${charActorHtml(o, 'anim-talk', '🙌 Yes! We can!')}
         `;
       } else if (p === 12) {
