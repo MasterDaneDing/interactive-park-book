@@ -267,23 +267,30 @@
             <span>☁️</span> <span>2. Direct PDF Save to Your Google Drive</span>
           </h3>
           <p class="text-xs text-slate-600 leading-relaxed">
-            Paste your Google Apps Script Web App URL below so students' completed PDFs upload straight to your Google Drive folder automatically on Page 12:
+            One-time teacher setup: deploy the Apps Script below (targets <strong>Grok → Playing in the Park</strong>), then paste the Web App URL here. Students' PDFs upload automatically on Save (local download still works as fallback).
           </p>
+          <p class="text-[11px] text-slate-500">Folder ID baked into the script: <code class="bg-sky-100 px-1 rounded">1hKJXNAaMB9BjpHD-Kg4bPDIxDUuPQ168</code></p>
           <div class="flex flex-col sm:flex-row gap-2">
             <input id="inputDriveWebhook" type="url" placeholder="https://script.google.com/macros/s/.../exec" class="flex-1 px-3 py-2 rounded-xl border border-sky-300 text-xs focus:outline-none focus:ring-2 focus:ring-sky-500" />
             <button id="btnSaveWebhook" type="button" class="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs whitespace-nowrap">
               Save Drive URL
             </button>
           </div>
-          <details class="text-xs">
+          <details class="text-xs" open>
             <summary class="cursor-pointer font-semibold text-sky-700 hover:underline">
-              📋 Click to copy the Google Apps Script (takes 30 seconds to deploy in your Drive)
+              📋 Deploy steps (≈60s) + copy Google Apps Script
             </summary>
+            <ol class="mt-2 list-decimal list-inside text-slate-600 space-y-1 leading-relaxed">
+              <li>Open <a class="text-sky-700 underline" href="https://script.google.com" target="_blank" rel="noopener">script.google.com</a> → New project</li>
+              <li>Paste the code below → Save → Deploy → New deployment → type <strong>Web app</strong></li>
+              <li>Execute as: <strong>Me</strong>; Who has access: <strong>Anyone</strong> → Deploy → copy the Web App URL</li>
+              <li>Paste that URL above and click <strong>Save Drive URL</strong> (also saved in this browser)</li>
+            </ol>
             <div class="mt-2 p-3 rounded-xl bg-slate-900 text-slate-100 font-mono text-[11px] overflow-x-auto">
 <pre id="appsScriptCode">function doPost(e) {
   var data = JSON.parse(e.postData.contents);
-  var folders = DriveApp.getFoldersByName("Interactive Book");
-  var folder = folders.hasNext() ? folders.next() : DriveApp.getRootFolder();
+  // Grok / Playing in the Park
+  var folder = DriveApp.getFolderById("1hKJXNAaMB9BjpHD-Kg4bPDIxDUuPQ168");
   var bytes = Utilities.base64Decode(data.pdfBase64);
   var blob = Utilities.newBlob(bytes, "application/pdf", data.filename || "Storybook.pdf");
   var file = folder.createFile(blob);
@@ -498,11 +505,25 @@
       driveWebhookUrl: ''
     };
 
+    // Public teacher config (no OAuth tokens). Paste deployed Apps Script Web App URL here
+    // after one-time deploy so every classroom device auto-uploads without localStorage.
+    const TEACHER_DRIVE_CONFIG = {
+      folderId: '1hKJXNAaMB9BjpHD-Kg4bPDIxDUuPQ168', // Grok / Playing in the Park
+      folderPath: 'Grok/Playing in the Park',
+      webhookUrl: '' // e.g. 'https://script.google.com/macros/s/.../exec'
+    };
+
     try {
       if (localStorage.getItem('park_book_saved_once') === 'true') state.hasSavedPdf = true;
       const savedWebhook = localStorage.getItem('park_book_drive_webhook');
-      if (savedWebhook) state.driveWebhookUrl = savedWebhook;
-    } catch (e) {}
+      if (savedWebhook) {
+        state.driveWebhookUrl = savedWebhook;
+      } else if (TEACHER_DRIVE_CONFIG.webhookUrl) {
+        state.driveWebhookUrl = TEACHER_DRIVE_CONFIG.webhookUrl;
+      }
+    } catch (e) {
+      if (TEACHER_DRIVE_CONFIG.webhookUrl) state.driveWebhookUrl = TEACHER_DRIVE_CONFIG.webhookUrl;
+    }
 
     state.heroPhotoDataUrl = createDefaultKidFaceDataUrl('boy', 0);
 
@@ -1564,10 +1585,16 @@
           }
         ];
 
+        // Higher-res export: draw in logical 960×680 space, rasterize at PDF_SCALE (was 1× / jpeg 0.86)
+        const PDF_SCALE = 3;
+        const PDF_JPEG_QUALITY = 0.92;
         const c = document.createElement('canvas');
-        c.width = 960;
-        c.height = 680;
+        c.width = 960 * PDF_SCALE;
+        c.height = 680 * PDF_SCALE;
         const ctx = c.getContext('2d');
+        ctx.scale(PDF_SCALE, PDF_SCALE);
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
 
         function drawHeroOnCanvas(cx, cy) {
           if (heroFaceImg) {
@@ -1652,7 +1679,7 @@
             ctx.fillText(ln, c.width / 2, startY + lIdx * 30);
           });
 
-          const pageDataUrl = c.toDataURL('image/jpeg', 0.86);
+          const pageDataUrl = c.toDataURL('image/jpeg', PDF_JPEG_QUALITY);
           doc.addImage(pageDataUrl, 'JPEG', 0, 0, pageW, pageH);
         }
 
@@ -1681,7 +1708,7 @@
             showToast(`Downloaded "${filename}"!`, '📥');
           }
         } else {
-          showToast(`Saved "${filename}"! (One-time save complete)`, '📥');
+          showToast(`Saved "${filename}" locally. (Drive upload needs teacher Apps Script URL in Setup)`, '📥');
         }
 
         state.hasSavedPdf = true;

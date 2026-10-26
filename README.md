@@ -8,3 +8,11 @@
 5. Your interactive book will be live at `https://MasterDaneDing.github.io/interactive-park-book/`!
 
 **Note:** The full set of image assets (play scenes, sorry scenes, arguing, backgrounds, body templates, lookafter, fisticuffs) and Friends Song MP3s are in your Google Drive "Interactive Book" folder. Due to the large number and size of binary files, please upload those subfolders and MP3s directly via the GitHub web interface or git for the complete external asset experience. The provided index.html embeds many core character and background assets as base64 already.
+## PDF quality & Google Drive auto-upload
+
+- Student **Save Story PDF** renders each page on a canvas at **3× scale** (960×680 logical → 2880×2040) with JPEG quality **0.92** (previously 1× / 0.86), then embeds into a landscape A4 jsPDF. Local download always remains the fallback.
+- Classroom Drive upload uses the existing **GitHub / Drive Setup** Apps Script Web App webhook (no OAuth tokens in the repo).
+- Target folder: **Grok / Playing in the Park**
+  - Grok folder id: `1teESTgKWcyRkpdihn3KQRFwZd7YYI1bq`
+  - Playing in the Park folder id: `1hKJXNAaMB9BjpHD-Kg4bPDIxDUuPQ168`
+- One-time teacher steps: open Setup → copy Apps Script → deploy as Web app (Execute as Me, Anyone) → paste URL → Save Drive URL. Optionally paste the same URL into `TEACHER_DRIVE_CONFIG.webhookUrl` in `index.html` so every device picks it up without localStorage.
