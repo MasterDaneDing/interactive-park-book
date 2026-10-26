@@ -11,7 +11,10 @@
 
 ## PDF quality & Google Drive auto-upload
 
-- Student **Save Story PDF** renders each page on a canvas at **3× scale** (960×680 logical → 2880×2040) with JPEG quality **0.92**, then embeds into a landscape A4 jsPDF. Local download always remains the fallback.
+- Student **Save Story PDF** renders **12 story pages** on a canvas at **3× scale** (960×680 logical → 2880×2040) with JPEG quality **0.92**, then embeds into a landscape A4 jsPDF. Local download always remains the fallback.
+- Story body text uses the **Stay With Me** font (`fonts/StayWithMe.otf`, free for personal use from [dafont](https://www.dafont.com/stay-with-me.font)) with yellow name highlights matching the on-screen book.
+- Scene art mirrors the interactive story: **play**, **argue**, **fight**, **look-after / parent**, **sorry**, and **friendship dance** finale (plus hero pages). Local folder assets are preferred over Drive URLs so the canvas stays untainted for PDF export.
+- Bugfix (blank text boxes): after `ctx.scale(PDF_SCALE)`, drawing used physical `c.width/2` as if it were logical — text was painted off-canvas. Export now uses logical `LW`/`LH` (960×680) for all coordinates.
 - Drive upload uses a Google **Apps Script Web App** webhook (no OAuth tokens / API keys in the browser). There is **no** browser Google Drive API key — that cannot write to personal Drive from a static page.
 - Target folder: **Grok / Playing in the Park**
   - Grok folder id: `1teESTgKWcyRkpdihn3KQRFwZd7YYI1bq`

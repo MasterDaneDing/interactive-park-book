@@ -81,6 +81,14 @@
       user-select: none;
       -webkit-user-drag: none;
     }
+
+    @font-face {
+      font-family: 'Stay With Me';
+      src: url('fonts/StayWithMe.otf') format('opentype');
+      font-weight: normal;
+      font-style: normal;
+      font-display: swap;
+    }
     .highlight-word {
       background: linear-gradient(120deg, #fef08a 0%, #facc15 100%);
       padding: 1px 9px;
@@ -383,6 +391,51 @@ function doPost(e) {
     ];
 
     // Custom local overrides if teacher loads local folder/ZIP
+    const ARGUE_LOCAL_PATHS = {
+      "bibi_booboo": "kids arguing/kids-024-bibi-vs-boo-boo.png",
+      "bibi_bunbun": "kids arguing/kids-020-bibi-vs-bun-bun.png",
+      "bibi_fungfung": "kids arguing/kids-022-bibi-vs-fung-fung.png",
+      "bibi_maria": "kids arguing/kids-021-bibi-vs-maria.png",
+      "bibi_tiktik": "kids arguing/kids-025-bibi-vs-tik-tik.png",
+      "bibi_waiwai": "kids arguing/kids-023-bibi-vs-wai-wai.png",
+      "booboo_bibi": "kids arguing/kids-046-boo-boo-vs-bibi.png",
+      "booboo_bunbun": "kids arguing/kids-045-boo-boo-vs-bun-bun.png",
+      "booboo_fungfung": "kids arguing/kids-048-boo-boo-vs-fung-fung.png",
+      "booboo_maria": "kids arguing/kids-055-boo-boo-vs-maria.png",
+      "booboo_tiktik": "kids arguing/kids-047-boo-boo-vs-tik-tik.png",
+      "booboo_waiwai": "kids arguing/kids-049-boo-boo-vs-wai-wai.png",
+      "bunbun_bibi": "kids arguing/kids-009-bun-bun-vs-bibi.png",
+      "bunbun_booboo": "kids arguing/kids-013-bun-bun-vs-boo-boo.png",
+      "bunbun_fungfung": "kids arguing/kids-010-bun-bun-vs-fung-fung.png",
+      "bunbun_maria": "kids arguing/kids-008-bun-bun-vs-maria.png",
+      "bunbun_tiktik": "kids arguing/kids-012-bun-bun-vs-tik-tik.png",
+      "bunbun_waiwai": "kids arguing/kids-011-bun-bun-vs-wai-wai.png",
+      "fungfung_bibi": "kids arguing/kids-029-fung-fung-vs-bibi.png",
+      "fungfung_booboo": "kids arguing/kids-001-fung-fung-vs-boo-boo.png",
+      "fungfung_bunbun": "kids arguing/kids-027-fung-fung-vs-bun-bun.png",
+      "fungfung_maria": "kids arguing/kids-006-fung-fung-vs-maria.png",
+      "fungfung_tiktik": "kids arguing/kids-031-fung-fung-vs-tik-tik.png",
+      "fungfung_waiwai": "kids arguing/kids-030-fung-fung-vs-wai-wai.png",
+      "maria_bibi": "kids arguing/kids-015-maria-vs-bibi.png",
+      "maria_booboo": "kids arguing/kids-019-maria-vs-boo-boo.png",
+      "maria_bunbun": "kids arguing/kids-014-maria-vs-bun-bun.png",
+      "maria_fungfung": "kids arguing/kids-016-maria-vs-fung-fung.png",
+      "maria_tiktik": "kids arguing/kids-018-maria-vs-tik-tik.png",
+      "maria_waiwai": "kids arguing/kids-017-maria-vs-wai-wai.png",
+      "tiktik_bibi": "kids arguing/kids-040-tik-tik-vs-bibi.png",
+      "tiktik_booboo": "kids arguing/kids-043-tik-tik-vs-boo-boo.png",
+      "tiktik_bunbun": "kids arguing/kids-044-tik-tik-vs-bun-bun.png",
+      "tiktik_fungfung": "kids arguing/kids-041-tik-tik-vs-fung-fung.png",
+      "tiktik_maria": "kids arguing/kids-039-tik-tik-vs-maria.png",
+      "tiktik_waiwai": "kids arguing/kids-042-tik-tik-vs-wai-wai.png",
+      "waiwai_bibi": "kids arguing/kids-035-wai-wai-vs-bibi.png",
+      "waiwai_booboo": "kids arguing/kids-038-wai-wai-vs-boo-boo.png",
+      "waiwai_bunbun": "kids arguing/kids-033-wai-wai-vs-bun-bun.png",
+      "waiwai_fungfung": "kids arguing/kids-036-wai-wai-vs-fung-fung.png",
+      "waiwai_maria": "kids arguing/kids-034-wai-wai-vs-maria.png",
+      "waiwai_tiktik": "kids arguing/kids-037-wai-wai-vs-tik-tik.png"
+    };
+
     const CUSTOM_SCENE_URLS = {};
     const CUSTOM_SONG_URLS = {};
 
@@ -409,26 +462,33 @@ function doPost(e) {
       const name1 = id1 === 'waiwai' ? 'meimei' : id1;
       const name2 = id2 === 'waiwai' ? 'meimei' : id2;
       if (category === 'play') {
+        // Prefer same-origin relative files first (needed for untainted canvas → PDF)
+        sources.push(`Kids-play-together-21 (1)/play-${id1}-${id2}.png`);
+        sources.push(`Kids-play-together-21 (1)/play-${id2}-${id1}.png`);
+        sources.push(`Kids-play-together-21 (1)/play-${name1}-${name2}.png`);
+        sources.push(`Kids-play-together-21 (1)/play-${name2}-${name1}.png`);
         const fid = DRIVE_PLAY_IDS[dirKey] || DRIVE_PLAY_IDS[revKey];
         if (fid) {
           sources.push(`https://drive.google.com/thumbnail?id=${fid}&sz=w1000`);
           sources.push(`https://lh3.googleusercontent.com/d/${fid}=w1000`);
         }
-        sources.push(`Kids-play-together-21 (1)/play-${id1}-${id2}.png`);
-        sources.push(`Kids-play-together-21 (1)/play-${id2}-${id1}.png`);
-        sources.push(`Kids-play-together-21 (1)/play-${name1}-${name2}.png`);
-        sources.push(`Kids-play-together-21 (1)/play-${name2}-${name1}.png`);
       } else if (category === 'sorry') {
+        sources.push(`Kids-say-sorry-21/sorry-${id1}-${id2}.png`);
+        sources.push(`Kids-say-sorry-21/sorry-${id2}-${id1}.png`);
+        sources.push(`Kids-say-sorry-21/sorry-${name1}-${name2}.png`);
+        sources.push(`Kids-say-sorry-21/sorry-${name2}-${name1}.png`);
         const fid = DRIVE_SORRY_IDS[dirKey] || DRIVE_SORRY_IDS[revKey];
         if (fid) {
           sources.push(`https://drive.google.com/thumbnail?id=${fid}&sz=w1000`);
           sources.push(`https://lh3.googleusercontent.com/d/${fid}=w1000`);
         }
-        sources.push(`Kids-say-sorry-21/sorry-${id1}-${id2}.png`);
-        sources.push(`Kids-say-sorry-21/sorry-${id2}-${id1}.png`);
-        sources.push(`Kids-say-sorry-21/sorry-${name1}-${name2}.png`);
-        sources.push(`Kids-say-sorry-21/sorry-${name2}-${name1}.png`);
       } else if (category === 'argue') {
+        // Prefer same-origin arguing PNGs (mapped from kids arguing/ filenames)
+        if (typeof ARGUE_LOCAL_PATHS !== 'undefined') {
+          if (ARGUE_LOCAL_PATHS[dirKey]) sources.push(ARGUE_LOCAL_PATHS[dirKey]);
+          if (ARGUE_LOCAL_PATHS[revKey]) sources.push(ARGUE_LOCAL_PATHS[revKey]);
+          if (ARGUE_LOCAL_PATHS[symKey]) sources.push(ARGUE_LOCAL_PATHS[symKey]);
+        }
         const fid = DRIVE_ARGUE_IDS[dirKey] || DRIVE_ARGUE_IDS[revKey];
         if (fid) {
           sources.push(`https://drive.google.com/thumbnail?id=${fid}&sz=w1000`);
@@ -1656,6 +1716,116 @@ function doPost(e) {
       });
     }
 
+    async function loadFirstAvailableImage(sources) {
+      if (!sources || !sources.length) return null;
+      for (const src of sources) {
+        const img = await loadImageElement(src);
+        if (img) return img;
+      }
+      return null;
+    }
+
+    let pdfStoryFontReady = null;
+    async function ensurePdfStoryFont() {
+      if (pdfStoryFontReady !== null) return pdfStoryFontReady;
+      try {
+        if (document.fonts && document.fonts.check('24px "Stay With Me"')) {
+          pdfStoryFontReady = true;
+          return true;
+        }
+        // Fetch bytes then FontFace(buffer) — more reliable than url() in some browsers
+        const res = await fetch('fonts/StayWithMe.otf');
+        if (!res.ok) throw new Error('Stay With Me font HTTP ' + res.status);
+        const buf = await res.arrayBuffer();
+        const face = new FontFace('Stay With Me', buf);
+        const loaded = await face.load();
+        document.fonts.add(loaded);
+        await document.fonts.ready;
+        // Force metrics use so check() flips true
+        const probe = document.createElement('canvas').getContext('2d');
+        probe.font = '24px "Stay With Me"';
+        probe.measureText('Stay With Me');
+        pdfStoryFontReady = document.fonts.check('24px "Stay With Me"') || true;
+        return pdfStoryFontReady;
+      } catch (e) {
+        console.warn('Stay With Me font load failed, using fallback', e);
+        pdfStoryFontReady = false;
+        return false;
+      }
+    }
+
+    function wrapCanvasText(ctx, text, maxWidth) {
+      const words = String(text || '').split(/\s+/).filter(Boolean);
+      const lines = [];
+      let line = '';
+      for (const w of words) {
+        const test = line ? `${line} ${w}` : w;
+        if (ctx.measureText(test).width > maxWidth && line) {
+          lines.push(line);
+          line = w;
+        } else {
+          line = test;
+        }
+      }
+      if (line) lines.push(line);
+      return lines.length ? lines : [''];
+    }
+
+    function drawHighlightedLine(ctx, line, names, centerX, y) {
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'alphabetic';
+      const tokens = line.split(/(\s+)/);
+      const parts = tokens.map((tok) => {
+        const isSpace = /^\s+$/.test(tok);
+        const isName = !isSpace && names.some((n) => n && tok.replace(/[^\w'-]/g, '') === n.replace(/[^\w'-]/g, ''));
+        return { tok, isSpace, isName, w: ctx.measureText(tok).width };
+      });
+      const totalW = parts.reduce((s, p) => s + p.w, 0);
+      let x = centerX - totalW / 2;
+      for (const p of parts) {
+        if (p.isName) {
+          const padX = 6;
+          const padY = 4;
+          ctx.fillStyle = '#facc15';
+          const rr = 7;
+          const bx = x - padX;
+          const by = y - 18;
+          const bw = p.w + padX * 2;
+          const bh = 24;
+          ctx.beginPath();
+          ctx.moveTo(bx + rr, by);
+          ctx.arcTo(bx + bw, by, bx + bw, by + bh, rr);
+          ctx.arcTo(bx + bw, by + bh, bx, by + bh, rr);
+          ctx.arcTo(bx, by + bh, bx, by, rr);
+          ctx.arcTo(bx, by, bx + bw, by, rr);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = '#713f12';
+        } else {
+          ctx.fillStyle = '#1e293b';
+        }
+        ctx.fillText(p.tok, x + (p.isSpace ? 0 : 0), y);
+        // fillText with textAlign left for token layout
+        x += p.w;
+      }
+    }
+
+    function drawStoryTextBlock(ctx, text, names, centerX, boxTop, boxH, maxWidth, fontSpec) {
+      ctx.font = fontSpec;
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'alphabetic';
+      const lines = wrapCanvasText(ctx, text, maxWidth);
+      const lineH = 30;
+      const blockH = lines.length * lineH;
+      let y = boxTop + (boxH + blockH) / 2 - lineH * 0.35;
+      // center vertically in text box
+      y = boxTop + Math.max(28, (boxH - blockH) / 2 + 22);
+      for (const ln of lines) {
+        drawHighlightedLine(ctx, ln, names, centerX, y);
+        y += lineH;
+      }
+    }
+
     async function generateAndSaveStorybookPdf(studentName) {
       const btn = document.getElementById('btnSavePdfOnce');
       if (btn) {
@@ -1664,6 +1834,9 @@ function doPost(e) {
       }
 
       try {
+        await ensurePdfStoryFont();
+        const storyFontFamily = pdfStoryFontReady ? '"Stay With Me", Fredoka, sans-serif' : 'Fredoka, sans-serif';
+
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
         const pageW = doc.internal.pageSize.getWidth();
@@ -1673,79 +1846,139 @@ function doPost(e) {
         const o = getOtherChar();
         const bgObj = PARK_BACKGROUNDS[state.bgIndex % PARK_BACKGROUNDS.length];
         const tpl = getHeroBodyTemplate();
+        const hero = studentName || getHeroDisplayName();
+        const highlightNames = [m.name, o.name, hero].filter(Boolean);
+
         const fightUri = FIGHT_SCENES[getPairKey(m.id, o.id)];
         const lookafterUri = LOOKAFTER_SCENES[m.id];
 
-        const [bgImg, mainImg, otherImg, heroFaceImg, heroBodyImg, fightImg, lookafterImg] = await Promise.all([
+        const [
+          bgImg, mainImg, otherImg, heroFaceImg, heroBodyImg,
+          playImg, argueImg, fightImg, sorryImg, lookafterImg
+        ] = await Promise.all([
           loadImageElement(bgObj.img),
           loadImageElement(m.img),
           loadImageElement(o.img),
-          loadImageElement(state.heroPhotoDataUrl),
+          loadImageElement(state.heroPhotoDataUrl || createDefaultKidFaceDataUrl(state.heroGender, 0)),
           loadImageElement(tpl.img),
-          loadImageElement(fightUri),
+          loadFirstAvailableImage(getPairSceneSources('play', m.id, o.id)),
+          loadFirstAvailableImage(getPairSceneSources('argue', m.id, o.id)),
+          loadFirstAvailableImage([fightUri].concat(getPairSceneSources('fight', m.id, o.id) || [])),
+          loadFirstAvailableImage(getPairSceneSources('sorry', m.id, o.id)),
           loadImageElement(lookafterUri)
         ]);
 
+        // Supporting dancers for finale (other park friends)
+        const supportingChars = CHARACTERS.filter(c => c.id !== m.id && c.id !== o.id);
+        const supportingImgs = await Promise.all(supportingChars.map(c => loadImageElement(c.img)));
+
+        // Mirror interactive pages 1–12 as closely as practical
         const storyPages = [
           {
             title: 'My Adventure in the Park',
-            text: `Starring & Written by: ${studentName} (with ${m.name} and ${o.name})`,
-            mode: 'trio'
+            text: `My adventure in the park! Starring ${m.name}, ${o.name}, and ${hero}.`,
+            mode: 'cover'
           },
           {
             title: 'Page 1: Playing in the Park',
-            text: `Once upon a time ${m.name} was playing in the park. ${m.subj} started to talk to ${o.name}. ${o.name} was listening to ${m.obj}.`,
-            mode: 'pair'
+            text: getPagePlainSentence(2),
+            mode: 'play'
           },
           {
-            title: 'Page 2: The Argument & Fight',
-            text: `Suddenly, ${o.name} said something to upset ${m.name}. ${m.name} argued and started fighting with ${o.name}. How terrible!`,
+            title: 'Page 2: Talking Happily',
+            text: getPagePlainSentence(3),
+            mode: 'play'
+          },
+          {
+            title: 'Page 3: The Argument',
+            text: getPagePlainSentence(4),
+            mode: 'argue'
+          },
+          {
+            title: 'Page 4: The Fight',
+            text: getPagePlainSentence(5),
             mode: 'fight'
           },
           {
-            title: 'Page 3: Running to Parent',
-            text: `${m.name} ran to ${m.poss} parent. "I will look after you," said ${m.poss} parent.`,
+            title: 'Page 5: Running to Parent',
+            text: getPagePlainSentence(6),
             mode: 'lookafter'
           },
           {
-            title: `Page 4: Amazing ${studentName} Appears!`,
-            text: `Then an amazing ${state.heroGender} named ${studentName} appeared! "${studentName} spoke to ${m.name}: We shouldn't argue or fight with each other!"`,
+            title: `Page 6: Amazing ${hero} Appears!`,
+            text: `Then an amazing ${state.heroGender} named ${hero} appeared!`,
+            mode: 'hero'
+          },
+          {
+            title: 'Page 7: Wise Words',
+            text: getPagePlainSentence(8),
             mode: 'hero_main'
           },
           {
-            title: 'Page 5: Saying Sorry',
-            text: `Then ${studentName} said, "Let's say sorry to them!" ${studentName} brought ${m.name} to ${o.name}. They said sorry to each other. Oh, that's so nice!`,
+            title: 'Page 8: Let\'s Say Sorry',
+            text: getPagePlainSentence(9),
+            mode: 'hero_main'
+          },
+          {
+            title: 'Page 9: Saying Sorry',
+            text: getPagePlainSentence(10),
+            mode: 'sorry'
+          },
+          {
+            title: 'Page 10: Can\'t We All Be Friends?',
+            text: getPagePlainSentence(11),
             mode: 'trio'
           },
           {
-            title: 'Page 6: Friends, Friends, Friends!',
-            text: `"We shouldn't lie! We shouldn't fight! Can't we all be friends?" "Yes! We can! Friends, friends, friends — let's all be nice to them!"`,
-            mode: 'trio'
+            title: 'Page 11: Friendship Dance Finale!',
+            text: getPagePlainSentence(12),
+            mode: 'dance'
           }
         ];
 
-        // Higher-res export: draw in logical 960×680 space, rasterize at PDF_SCALE (was 1× / jpeg 0.86)
+        // Higher-res export: draw in logical 960×680 space, rasterize at PDF_SCALE
+        // IMPORTANT: after ctx.scale(PDF_SCALE), always use logical LW/LH — never c.width/c.height
+        // (those are physical pixels; using them for fillText x places text off-canvas → blank boxes)
         const PDF_SCALE = 3;
         const PDF_JPEG_QUALITY = 0.92;
+        const LW = 960;
+        const LH = 680;
         const c = document.createElement('canvas');
-        c.width = 960 * PDF_SCALE;
-        c.height = 680 * PDF_SCALE;
+        c.width = LW * PDF_SCALE;
+        c.height = LH * PDF_SCALE;
         const ctx = c.getContext('2d');
         ctx.scale(PDF_SCALE, PDF_SCALE);
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
 
-        function drawHeroOnCanvas(cx, cy) {
+        function drawHeroOnCanvas(cx, cy, scale = 1) {
+          const bw = 150 * scale;
+          const bh = 250 * scale;
+          const fr = 36 * scale;
           if (heroFaceImg) {
             ctx.save();
             ctx.beginPath();
-            ctx.arc(cx, cy - 66, 36, 0, Math.PI * 2);
+            ctx.arc(cx, cy - 66 * scale, fr, 0, Math.PI * 2);
             ctx.clip();
-            ctx.drawImage(heroFaceImg, cx - 36, cy - 102, 72, 72);
+            ctx.drawImage(heroFaceImg, cx - fr, cy - 102 * scale, fr * 2, fr * 2);
             ctx.restore();
           }
           if (heroBodyImg) {
-            ctx.drawImage(heroBodyImg, cx - 75, cy - 125, 150, 250);
+            ctx.drawImage(heroBodyImg, cx - bw / 2, cy - 125 * scale, bw, bh);
+          }
+        }
+
+        function drawSceneArt(img, fallbackFn) {
+          if (img) {
+            // Fit scene art inside the gold frame area
+            const maxW = 520;
+            const maxH = 340;
+            const ratio = Math.min(maxW / img.width, maxH / img.height);
+            const dw = img.width * ratio;
+            const dh = img.height * ratio;
+            ctx.drawImage(img, (LW - dw) / 2, 90 + (360 - dh) / 2, dw, dh);
+          } else if (fallbackFn) {
+            fallbackFn();
           }
         }
 
@@ -1753,9 +1986,11 @@ function doPost(e) {
           if (i > 0) doc.addPage();
           const sp = storyPages[i];
 
+          // Cream page background (logical coords)
           ctx.fillStyle = '#fef9c3';
-          ctx.fillRect(0, 0, c.width, c.height);
+          ctx.fillRect(0, 0, LW, LH);
 
+          // Illustration frame
           if (bgImg) {
             ctx.drawImage(bgImg, 40, 65, 880, 410);
           } else {
@@ -1766,27 +2001,96 @@ function doPost(e) {
           ctx.lineWidth = 6;
           ctx.strokeRect(40, 65, 880, 410);
 
+          // Title (sans UI chrome font — keep readable)
           ctx.fillStyle = '#0f172a';
-          ctx.font = 'bold 26px sans-serif';
+          ctx.font = 'bold 24px Fredoka, sans-serif';
           ctx.textAlign = 'center';
-          ctx.fillText(sp.title, c.width / 2, 42);
+          ctx.textBaseline = 'alphabetic';
+          ctx.fillText(sp.title, LW / 2, 42);
 
-          if (sp.mode === 'fight' && fightImg) {
-            ctx.drawImage(fightImg, 310, 140, 340, 310);
-          } else if (sp.mode === 'lookafter' && lookafterImg) {
-            ctx.drawImage(lookafterImg, 310, 140, 340, 310);
-          } else if (sp.mode === 'pair') {
-            if (mainImg) ctx.drawImage(mainImg, 280, 210, 150, 230);
-            if (otherImg) ctx.drawImage(otherImg, 530, 210, 150, 230);
+          // Scene art by mode
+          if (sp.mode === 'play') {
+            drawSceneArt(playImg, () => {
+              if (mainImg) ctx.drawImage(mainImg, 280, 180, 150, 230);
+              if (otherImg) ctx.drawImage(otherImg, 530, 180, 150, 230);
+            });
+          } else if (sp.mode === 'argue') {
+            drawSceneArt(argueImg || fightImg, () => {
+              if (mainImg) ctx.drawImage(mainImg, 280, 180, 150, 230);
+              if (otherImg) ctx.drawImage(otherImg, 530, 180, 150, 230);
+              ctx.font = 'bold 48px sans-serif';
+              ctx.fillText('⚡💢', LW / 2, 200);
+            });
+          } else if (sp.mode === 'fight') {
+            drawSceneArt(fightImg || argueImg, () => {
+              if (mainImg) ctx.drawImage(mainImg, 280, 180, 150, 230);
+              if (otherImg) ctx.drawImage(otherImg, 530, 180, 150, 230);
+              ctx.font = 'bold 48px sans-serif';
+              ctx.fillText('💥', LW / 2, 200);
+            });
+          } else if (sp.mode === 'lookafter') {
+            drawSceneArt(lookafterImg, () => {
+              if (mainImg) ctx.drawImage(mainImg, 405, 180, 150, 230);
+            });
+          } else if (sp.mode === 'sorry') {
+            // Hero beside sorry scene
+            drawHeroOnCanvas(170, 320, 0.85);
+            if (sorryImg) {
+              const maxW = 420;
+              const maxH = 320;
+              const ratio = Math.min(maxW / sorryImg.width, maxH / sorryImg.height);
+              const dw = sorryImg.width * ratio;
+              const dh = sorryImg.height * ratio;
+              ctx.drawImage(sorryImg, 280 + (520 - dw) / 2, 100 + (340 - dh) / 2, dw, dh);
+            } else {
+              if (mainImg) ctx.drawImage(mainImg, 360, 180, 140, 220);
+              if (otherImg) ctx.drawImage(otherImg, 560, 180, 140, 220);
+            }
+          } else if (sp.mode === 'hero') {
+            drawHeroOnCanvas(LW / 2, 320, 1.05);
           } else if (sp.mode === 'hero_main') {
-            drawHeroOnCanvas(360, 320);
-            if (mainImg) ctx.drawImage(mainImg, 520, 210, 150, 230);
-          } else {
-            if (mainImg) ctx.drawImage(mainImg, 190, 210, 150, 230);
+            drawHeroOnCanvas(340, 320);
+            if (mainImg) ctx.drawImage(mainImg, 520, 180, 150, 230);
+          } else if (sp.mode === 'dance') {
+            // Finale: supporting friends + main + hero + other
+            const dancers = [];
+            supportingImgs.forEach((img, idx) => {
+              if (img) dancers.push({ img, w: 90, h: 140 });
+            });
+            // insert main, hero marker, other near center
+            const row = [];
+            supportingImgs.slice(0, 2).forEach((img) => { if (img) row.push({ type: 'char', img, w: 95, h: 150 }); });
+            if (mainImg) row.push({ type: 'char', img: mainImg, w: 130, h: 200 });
+            row.push({ type: 'hero' });
+            if (otherImg) row.push({ type: 'char', img: otherImg, w: 130, h: 200 });
+            supportingImgs.slice(2).forEach((img) => { if (img) row.push({ type: 'char', img, w: 95, h: 150 }); });
+            const gaps = 12;
+            const totalW = row.reduce((s, it) => s + (it.type === 'hero' ? 120 : it.w) + gaps, -gaps);
+            let x = (LW - totalW) / 2;
+            const baseline = 420;
+            row.forEach((it) => {
+              if (it.type === 'hero') {
+                drawHeroOnCanvas(x + 60, baseline - 30, 0.75);
+                x += 120 + gaps;
+              } else {
+                ctx.drawImage(it.img, x, baseline - it.h, it.w, it.h);
+                x += it.w + gaps;
+              }
+            });
+            ctx.font = 'bold 28px sans-serif';
+            ctx.fillStyle = '#f472b6';
+            ctx.textAlign = 'center';
+            ctx.fillText('🪩 Friends, friends, friends! 💃', LW / 2, 100);
+          } else if (sp.mode === 'cover' || sp.mode === 'trio') {
+            if (mainImg) ctx.drawImage(mainImg, 190, 180, 150, 230);
             drawHeroOnCanvas(480, 320);
-            if (otherImg) ctx.drawImage(otherImg, 620, 210, 150, 230);
+            if (otherImg) ctx.drawImage(otherImg, 620, 180, 150, 230);
+          } else {
+            if (mainImg) ctx.drawImage(mainImg, 280, 180, 150, 230);
+            if (otherImg) ctx.drawImage(otherImg, 530, 180, 150, 230);
           }
 
+          // Story text box
           ctx.fillStyle = '#ffffff';
           ctx.strokeStyle = '#f59e0b';
           ctx.lineWidth = 4;
@@ -1795,28 +2099,17 @@ function doPost(e) {
           ctx.fill();
           ctx.stroke();
 
-          ctx.fillStyle = '#1e293b';
-          ctx.font = 'bold 21px sans-serif';
-          ctx.textAlign = 'center';
-
-          const words = sp.text.split(' ');
-          let line = '';
-          const lines = [];
-          for (let w of words) {
-            const test = line ? line + ' ' + w : w;
-            if (ctx.measureText(test).width > 820) {
-              lines.push(line);
-              line = w;
-            } else {
-              line = test;
-            }
-          }
-          if (line) lines.push(line);
-
-          const startY = 550 - ((lines.length - 1) * 14);
-          lines.forEach((ln, lIdx) => {
-            ctx.fillText(ln, c.width / 2, startY + lIdx * 30);
-          });
+          // Body text with Stay With Me + yellow name highlights (logical center = LW/2)
+          drawStoryTextBlock(
+            ctx,
+            sp.text,
+            highlightNames,
+            LW / 2,
+            495,
+            150,
+            820,
+            `bold 22px ${storyFontFamily}`
+          );
 
           const pageDataUrl = c.toDataURL('image/jpeg', PDF_JPEG_QUALITY);
           doc.addImage(pageDataUrl, 'JPEG', 0, 0, pageW, pageH);
@@ -1859,6 +2152,7 @@ function doPost(e) {
         playSoundEffect('fanfare');
         renderPage();
       } catch (err) {
+        console.error('PDF export failed', err);
         showToast('Could not generate PDF — please try again.', '⚠️');
         if (btn) {
           btn.disabled = false;
