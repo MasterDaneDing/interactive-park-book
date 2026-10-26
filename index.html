@@ -1771,7 +1771,8 @@ function doPost(e) {
       return lines.length ? lines : [''];
     }
 
-    function drawHighlightedLine(ctx, line, names, centerX, y) {
+    function drawHighlightedLine(ctx, line, names, centerX, y, fontSize) {
+      const fs = fontSize || 22;
       ctx.textAlign = 'left';
       ctx.textBaseline = 'alphabetic';
       const tokens = line.split(/(\s+)/);
@@ -1782,16 +1783,16 @@ function doPost(e) {
       });
       const totalW = parts.reduce((s, p) => s + p.w, 0);
       let x = centerX - totalW / 2;
+      const padX = Math.max(4, fs * 0.22);
+      const ascent = fs * 0.82;
+      const bh = fs * 1.1;
+      const rr = Math.max(4, fs * 0.28);
       for (const p of parts) {
         if (p.isName) {
-          const padX = 6;
-          const padY = 4;
           ctx.fillStyle = '#facc15';
-          const rr = 7;
           const bx = x - padX;
-          const by = y - 18;
+          const by = y - ascent;
           const bw = p.w + padX * 2;
-          const bh = 24;
           ctx.beginPath();
           ctx.moveTo(bx + rr, by);
           ctx.arcTo(bx + bw, by, bx + bw, by + bh, rr);
@@ -1804,24 +1805,40 @@ function doPost(e) {
         } else {
           ctx.fillStyle = '#1e293b';
         }
-        ctx.fillText(p.tok, x + (p.isSpace ? 0 : 0), y);
-        // fillText with textAlign left for token layout
+        ctx.fillText(p.tok, x, y);
         x += p.w;
       }
     }
 
-    function drawStoryTextBlock(ctx, text, names, centerX, boxTop, boxH, maxWidth, fontSpec) {
-      ctx.font = fontSpec;
+    // Fit story caption to the white box: start large (kids-book size) and shrink
+    // until wrapped lines fit both width and height with padding.
+    function fitStoryCaptionFont(ctx, text, maxWidth, boxH, fontFamily) {
+      const padY = 18;
+      const availH = Math.max(40, boxH - padY * 2);
+      let best = { size: 22, lines: [String(text || '')], lineH: 30 };
+      for (let size = 40; size >= 22; size -= 1) {
+        ctx.font = `bold ${size}px ${fontFamily}`;
+        const lines = wrapCanvasText(ctx, text, maxWidth);
+        const lineH = Math.round(size * 1.28);
+        if (lines.length * lineH <= availH) {
+          best = { size, lines, lineH };
+          break;
+        }
+      }
+      return best;
+    }
+
+    function drawStoryTextBlock(ctx, text, names, centerX, boxTop, boxH, maxWidth, fontFamily) {
+      const family = fontFamily || 'Fredoka, sans-serif';
+      const { size, lines, lineH } = fitStoryCaptionFont(ctx, text, maxWidth, boxH, family);
+      ctx.font = `bold ${size}px ${family}`;
       ctx.textAlign = 'left';
       ctx.textBaseline = 'alphabetic';
-      const lines = wrapCanvasText(ctx, text, maxWidth);
-      const lineH = 30;
       const blockH = lines.length * lineH;
-      let y = boxTop + (boxH + blockH) / 2 - lineH * 0.35;
-      // center vertically in text box
-      y = boxTop + Math.max(28, (boxH - blockH) / 2 + 22);
+      // Vertically center the text block inside the caption box
+      let y = boxTop + (boxH - blockH) / 2 + size * 0.78;
       for (const ln of lines) {
-        drawHighlightedLine(ctx, ln, names, centerX, y);
+        drawHighlightedLine(ctx, ln, names, centerX, y, size);
         y += lineH;
       }
     }
@@ -1854,7 +1871,7 @@ function doPost(e) {
 
         const [
           bgImg, mainImg, otherImg, heroFaceImg, heroBodyImg,
-          playImg, argueImg, fightImg, sorryImg, lookafterImg
+          playImg, argueImg, fightImg, sorryImg, lookafterImg, qrImg
         ] = await Promise.all([
           loadImageElement(bgObj.img),
           loadImageElement(m.img),
@@ -1865,7 +1882,8 @@ function doPost(e) {
           loadFirstAvailableImage(getPairSceneSources('argue', m.id, o.id)),
           loadFirstAvailableImage([fightUri].concat(getPairSceneSources('fight', m.id, o.id) || [])),
           loadFirstAvailableImage(getPairSceneSources('sorry', m.id, o.id)),
-          loadImageElement(lookafterUri)
+          loadImageElement(lookafterUri),
+          loadImageElement('assets/my-park-adventure-qr.png')
         ]);
 
         // Supporting dancers for finale (other park friends)
@@ -2100,6 +2118,7 @@ function doPost(e) {
           ctx.stroke();
 
           // Body text with Stay With Me + yellow name highlights (logical center = LW/2)
+          // Dynamic kids-book size (~28–40px) filling the 880×150 caption box
           drawStoryTextBlock(
             ctx,
             sp.text,
@@ -2107,12 +2126,69 @@ function doPost(e) {
             LW / 2,
             495,
             150,
-            820,
-            `bold 22px ${storyFontFamily}`
+            800,
+            storyFontFamily
           );
 
           const pageDataUrl = c.toDataURL('image/jpeg', PDF_JPEG_QUALITY);
           doc.addImage(pageDataUrl, 'JPEG', 0, 0, pageW, pageH);
+        }
+
+        // Final page: CTA + QR (repo asset assets/my-park-adventure-qr.png)
+        {
+          doc.addPage();
+          ctx.fillStyle = '#fef9c3';
+          ctx.fillRect(0, 0, LW, LH);
+
+          ctx.fillStyle = '#0f172a';
+          ctx.font = 'bold 26px Fredoka, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'alphabetic';
+          ctx.fillText('More Stories & Songs!', LW / 2, 42);
+
+          // Soft frame for the QR
+          ctx.fillStyle = '#ffffff';
+          ctx.strokeStyle = '#f59e0b';
+          ctx.lineWidth = 6;
+          ctx.beginPath();
+          ctx.roundRect(40, 65, 880, 410, 22);
+          ctx.fill();
+          ctx.stroke();
+
+          if (qrImg) {
+            const qrMax = 340;
+            const ratio = Math.min(qrMax / qrImg.width, qrMax / qrImg.height);
+            const qw = qrImg.width * ratio;
+            const qh = qrImg.height * ratio;
+            ctx.drawImage(qrImg, (LW - qw) / 2, 65 + (410 - qh) / 2, qw, qh);
+          } else {
+            ctx.fillStyle = '#64748b';
+            ctx.font = 'bold 22px Fredoka, sans-serif';
+            ctx.fillText('QR image missing — check assets/my-park-adventure-qr.png', LW / 2, 280);
+          }
+
+          // Caption box with large Stay With Me CTA
+          ctx.fillStyle = '#ffffff';
+          ctx.strokeStyle = '#f59e0b';
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.roundRect(40, 495, 880, 150, 18);
+          ctx.fill();
+          ctx.stroke();
+
+          drawStoryTextBlock(
+            ctx,
+            "Want to make more stories or listen to the songs? Here's the QR code!",
+            [],
+            LW / 2,
+            495,
+            150,
+            800,
+            storyFontFamily
+          );
+
+          const qrPageDataUrl = c.toDataURL('image/jpeg', PDF_JPEG_QUALITY);
+          doc.addImage(qrPageDataUrl, 'JPEG', 0, 0, pageW, pageH);
         }
 
         const safeName = studentName.replace(/[^a-zA-Z0-9_-]/g, '_');
