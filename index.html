@@ -1236,21 +1236,34 @@
         const previewEl = document.getElementById('facePreviewImg');
 
         btnStartCam.addEventListener('click', async () => {
-          if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            showToast('Camera not available in this window — use "Upload Photo" or a preset face!', '📷');
+          // Must stay behind a user gesture (required on iPad Safari) and HTTPS.
+          if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            showToast(cameraUnavailableMessage(), '📷');
             return;
           }
-          try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 320, height: 320 }, audio: false });
-            state.webcamStream = stream;
-            videoEl.srcObject = stream;
-            videoEl.classList.remove('hidden');
-            previewEl.classList.add('hidden');
-            btnSnap.classList.remove('hidden');
-            btnStartCam.classList.add('hidden');
-          } catch (err) {
-            showToast('Camera permission blocked in preview — use "Upload Photo" to pick any photo!', '🖼️');
+          const tryConstraints = [
+            { video: { facingMode: { ideal: 'user' } }, audio: false },
+            { video: true, audio: false }
+          ];
+          let lastErr = null;
+          for (const constraints of tryConstraints) {
+            try {
+              const stream = await navigator.mediaDevices.getUserMedia(constraints);
+              state.webcamStream = stream;
+              videoEl.srcObject = stream;
+              videoEl.classList.remove('hidden');
+              previewEl.classList.add('hidden');
+              btnSnap.classList.remove('hidden');
+              btnStartCam.classList.add('hidden');
+              return;
+            } catch (err) {
+              lastErr = err;
+              const name = (err && err.name) || '';
+              // Only retry softer constraints for OverconstrainedError.
+              if (name !== 'OverconstrainedError' && name !== 'ConstraintNotSatisfiedError') break;
+            }
           }
+          showToast(cameraUnavailableMessage(lastErr), '🖼️');
         });
 
         btnSnap.addEventListener('click', () => {
@@ -1471,6 +1484,62 @@
 
       renderPage();
       speakCurrentPageText(false);
+    }
+
+    function isEmbeddedFrame() {
+      try {
+        return window.self !== window.top;
+      } catch (_) {
+        return true;
+      }
+    }
+
+    function cameraPolicyAllows() {
+      try {
+        if (document.permissionsPolicy && typeof document.permissionsPolicy.allowsFeature === 'function') {
+          return document.permissionsPolicy.allowsFeature('camera');
+        }
+        if (document.featurePolicy && typeof document.featurePolicy.allowsFeature === 'function') {
+          return document.featurePolicy.allowsFeature('camera');
+        }
+      } catch (_) {}
+      return true;
+    }
+
+    /** Accurate toast copy — never claim "preview" on a top-level HTTPS Pages load. */
+    function cameraUnavailableMessage(err) {
+      const inFrame = isEmbeddedFrame();
+      if (!window.isSecureContext) {
+        return 'Camera needs a secure (HTTPS) page — open the live site, or use "Upload Photo"!';
+      }
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        return 'Camera not supported in this browser — use "Upload Photo" or a preset face!';
+      }
+      if (inFrame && !cameraPolicyAllows()) {
+        return 'Camera blocked in this embedded window — open the full site, or use "Upload Photo"!';
+      }
+      const name = (err && err.name) || '';
+      if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
+        return 'Camera permission denied — allow camera in the browser address bar, or use "Upload Photo"!';
+      }
+      if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
+        return 'No camera found on this device — use "Upload Photo" or a preset face!';
+      }
+      if (name === 'NotReadableError' || name === 'TrackStartError') {
+        return 'Camera is busy in another app — close it, then try again, or use "Upload Photo"!';
+      }
+      if (name === 'OverconstrainedError' || name === 'ConstraintNotSatisfiedError') {
+        return 'This camera could not use the requested settings — use "Upload Photo" or a preset face!';
+      }
+      if (name === 'SecurityError') {
+        return inFrame
+          ? 'Camera blocked in this embedded window — open the full site, or use "Upload Photo"!'
+          : 'Camera blocked by the browser — use "Upload Photo" or a preset face!';
+      }
+      if (inFrame) {
+        return 'Camera unavailable in this embedded window — open the full site, or use "Upload Photo"!';
+      }
+      return 'Could not open the camera — use "Upload Photo" or a preset face!';
     }
 
     function stopWebcam() {
