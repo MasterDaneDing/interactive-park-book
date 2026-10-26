@@ -281,21 +281,52 @@
               📋 Deploy steps (≈60s) + copy Google Apps Script
             </summary>
             <ol class="mt-2 list-decimal list-inside text-slate-600 space-y-1 leading-relaxed">
-              <li>Open <a class="text-sky-700 underline" href="https://script.google.com" target="_blank" rel="noopener">script.google.com</a> → New project</li>
+              <li>Open <a class="text-sky-700 underline" href="https://script.google.com" target="_blank" rel="noopener">script.google.com</a> → New project (full script also in repo file <code class="bg-sky-100 px-1 rounded">drive-upload.gs</code>)</li>
               <li>Paste the code below → Save → Deploy → New deployment → type <strong>Web app</strong></li>
-              <li>Execute as: <strong>Me</strong>; Who has access: <strong>Anyone</strong> → Deploy → copy the Web App URL</li>
-              <li>Paste that URL above and click <strong>Save Drive URL</strong> (also saved in this browser)</li>
+              <li>Execute as: <strong>Me</strong>; Who has access: <strong>Anyone</strong> → Deploy → copy the Web App URL (ends in <code>/exec</code>)</li>
+              <li>Paste that URL above and click <strong>Save Drive URL</strong> (this browser). For every device, also put it in <code>TEACHER_DRIVE_CONFIG.webhookUrl</code> in <code>index.html</code> and push.</li>
+              <li>Optional check: open the URL in a browser — you should see <code>{"status":"ok","service":"park-book-drive",...}</code></li>
             </ol>
             <div class="mt-2 p-3 rounded-xl bg-slate-900 text-slate-100 font-mono text-[11px] overflow-x-auto">
-<pre id="appsScriptCode">function doPost(e) {
-  var data = JSON.parse(e.postData.contents);
-  // Grok / Playing in the Park
-  var folder = DriveApp.getFolderById("1hKJXNAaMB9BjpHD-Kg4bPDIxDUuPQ168");
-  var bytes = Utilities.base64Decode(data.pdfBase64);
-  var blob = Utilities.newBlob(bytes, "application/pdf", data.filename || "Storybook.pdf");
-  var file = folder.createFile(blob);
-  return ContentService.createTextOutput(JSON.stringify({ status: "ok", url: file.getUrl() }))
-    .setMimeType(ContentService.MimeType.JSON);
+<pre id="appsScriptCode">var TARGET_FOLDER_ID = "1hKJXNAaMB9BjpHD-Kg4bPDIxDUuPQ168";
+
+function doGet(e) {
+  return ContentService.createTextOutput(JSON.stringify({
+    status: "ok",
+    service: "park-book-drive",
+    folderId: TARGET_FOLDER_ID
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  try {
+    if (!e || !e.postData || !e.postData.contents) {
+      return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Empty body" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    var data = JSON.parse(e.postData.contents);
+    var b64 = data.pdfBase64 || "";
+    var comma = b64.indexOf(",");
+    if (b64.indexOf("base64") !== -1 && comma !== -1) b64 = b64.substring(comma + 1);
+    if (!b64) {
+      return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Missing pdfBase64" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    var folder = DriveApp.getFolderById(TARGET_FOLDER_ID);
+    var name = (data.filename || "Storybook.pdf").toString().replace(/[\/\\?%*:|"<>]/g, "_");
+    if (!/\.pdf$/i.test(name)) name += ".pdf";
+    var file = folder.createFile(Utilities.newBlob(Utilities.base64Decode(b64), "application/pdf", name));
+    var bits = [];
+    if (data.studentName) bits.push("Student: " + data.studentName);
+    if (data.mainCharacter) bits.push("Main: " + data.mainCharacter);
+    if (data.otherCharacter) bits.push("Friend: " + data.otherCharacter);
+    if (bits.length) file.setDescription(bits.join(" | "));
+    return ContentService.createTextOutput(JSON.stringify({ status: "ok", url: file.getUrl(), fileId: file.getId() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: String(err.message || err) }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
 }</pre>
               <button id="btnCopyAppsScript" type="button" class="mt-2 px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-sans font-bold text-xs">
                 Copy Google Apps Script Code
@@ -522,7 +553,9 @@
     const TEACHER_DRIVE_CONFIG = {
       folderId: '1hKJXNAaMB9BjpHD-Kg4bPDIxDUuPQ168', // Grok / Playing in the Park
       folderPath: 'Grok/Playing in the Park',
-      webhookUrl: '' // e.g. 'https://script.google.com/macros/s/.../exec'
+      // Leave empty until Charlie deploys drive-upload.gs as a Web App, then paste the /exec URL here
+      // and push so every device uploads without Setup/localStorage. Do not invent a fake URL.
+      webhookUrl: ''
     };
 
     try {
@@ -1797,10 +1830,11 @@
         if (state.driveWebhookUrl) {
           try {
             const pdfBase64 = doc.output('datauristring').split(',')[1];
+            // text/plain keeps this a "simple" no-cors request (json Content-Type is blocked)
             await fetch(state.driveWebhookUrl, {
               method: 'POST',
               mode: 'no-cors',
-              headers: { 'Content-Type': 'application/json' },
+              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
               body: JSON.stringify({
                 filename,
                 studentName,
@@ -1814,7 +1848,7 @@
             showToast(`Downloaded "${filename}"!`, '📥');
           }
         } else {
-          showToast(`Saved "${filename}" locally. (Drive upload needs teacher Apps Script URL in Setup)`, '📥');
+          showToast(`Saved "${filename}" on this device. To also send to Drive: Setup → paste your Web App URL → Save Drive URL`, '📥');
         }
 
         state.hasSavedPdf = true;

@@ -8,11 +8,25 @@
 5. Your interactive book will be live at `https://MasterDaneDing.github.io/interactive-park-book/`!
 
 **Note:** The full set of image assets (play scenes, sorry scenes, arguing, backgrounds, body templates, lookafter, fisticuffs) and Friends Song MP3s are in your Google Drive "Interactive Book" folder. Due to the large number and size of binary files, please upload those subfolders and MP3s directly via the GitHub web interface or git for the complete external asset experience. The provided index.html embeds many core character and background assets as base64 already.
+
 ## PDF quality & Google Drive auto-upload
 
-- Student **Save Story PDF** renders each page on a canvas at **3× scale** (960×680 logical → 2880×2040) with JPEG quality **0.92** (previously 1× / 0.86), then embeds into a landscape A4 jsPDF. Local download always remains the fallback.
-- Classroom Drive upload uses the existing **GitHub / Drive Setup** Apps Script Web App webhook (no OAuth tokens in the repo).
+- Student **Save Story PDF** renders each page on a canvas at **3× scale** (960×680 logical → 2880×2040) with JPEG quality **0.92**, then embeds into a landscape A4 jsPDF. Local download always remains the fallback.
+- Drive upload uses a Google **Apps Script Web App** webhook (no OAuth tokens / API keys in the browser). There is **no** browser Google Drive API key — that cannot write to personal Drive from a static page.
 - Target folder: **Grok / Playing in the Park**
   - Grok folder id: `1teESTgKWcyRkpdihn3KQRFwZd7YYI1bq`
   - Playing in the Park folder id: `1hKJXNAaMB9BjpHD-Kg4bPDIxDUuPQ168`
-- One-time teacher steps: open Setup → copy Apps Script → deploy as Web app (Execute as Me, Anyone) → paste URL → Save Drive URL. Optionally paste the same URL into `TEACHER_DRIVE_CONFIG.webhookUrl` in `index.html` so every device picks it up without localStorage.
+- Canonical script: [`drive-upload.gs`](./drive-upload.gs) (same code is shown under **GitHub / Drive Setup** in the app for one-click copy).
+
+### One-time deploy (Charlie, as himself)
+
+1. Open [script.google.com](https://script.google.com) → **New project**.
+2. Paste the contents of `drive-upload.gs` → **Save**.
+3. **Deploy** → **New deployment** → type **Web app**.
+4. Execute as: **Me**; Who has access: **Anyone** → **Deploy**.
+5. Copy the Web App URL (ends with `/exec`).
+6. Optional smoke test: open that URL in a browser — expect `{"status":"ok","service":"park-book-drive",...}`.
+7. In the live book: **Setup** → paste URL → **Save Drive URL** (stores in this browser's localStorage).
+8. To bake it for every device: set `TEACHER_DRIVE_CONFIG.webhookUrl` in `index.html` to that same URL, commit, and push. Leave it empty until a real `/exec` URL exists — do not invent one.
+
+Until `webhookUrl` (or Setup localStorage) is set, Save still downloads the PDF locally and shows a short Setup hint.
